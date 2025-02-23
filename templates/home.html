@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOME</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'home.css')}}">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">SIGN LANGUAGE CONVERTER</div>
+        <div class="menu-container">
+            <button class="signup-button" onclick="window.location.href='/signup'">Sign Up</button>
+            <nav class="navbar">
+                <a href="/">Home</a>
+                <a href="/feedback">Feedback</a>
+                <a href="/">Contact</a>
+                <a href="/">Log out</a>
+                <a href="https://www.dictionary.com">Dictionary</a>
+            </nav>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1>Welcome to Sign Language Converter</h1>
+        <p>Convert text to sign language effortlessly.</p>
+    </div>
+    
+    <div class="container">
+        <h2>Enter Text</h2>
+        <textarea class="text-box" placeholder="Type your text here..."></textarea>
+        <div class="buttons">
+            <button class="play-button" onclick="playText()">▶ Play</button>
+            <button class="clear-button" onclick="clearText()">🗑 Clear</button>
+            <button class="speech-button" onclick="startSpeechRecognition()">🎤 Speak</button>
+        </div>
+        <div class="jasigning-container">
+            <button onclick="convertAndPlay()">Convert & Play</button>
+            <iframe id="jasigning-frame" src="https://vhg.cmp.uea.ac.uk/jasigning/" width="600" height="400"></iframe>
+        </div>
+    </div>    </div>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+</html>
