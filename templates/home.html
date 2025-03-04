@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOME</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename= 'home.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
 </head>
 <body>
     <div class="header">
@@ -37,9 +37,16 @@
         </div>
         <div class="jasigning-container">
             <button onclick="convertAndPlay()">Convert & Play</button>
-            <iframe id="jasigning-frame" src="https://vhg.cmp.uea.ac.uk/jasigning/" width="600" height="400"></iframe>
+            <iframe
+            src="/cwasa-proxy"
+            width="500"
+            height="500"
+            frameborder="0"
+            allowfullscreen>
+        </iframe>        
         </div>
-    </div>    </div>
+    </div>
+
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </body>
 </html>
