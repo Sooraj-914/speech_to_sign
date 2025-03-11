@@ -19,18 +19,6 @@ mysql = MySQL(app)
 def home():
     return render_template('home.html')
 
-@app.route('/cwasa-proxy')
-def cwasa_proxy():
-    # Fetch the CWASA player content
-    headers = {'Accept-Encoding': 'identity'}
-    response = requests.get('https://vhg.cmp.uea.ac.uk/tech/jas/std/cwa/OneAvClient.html', headers=headersa)
-    
-    # Remove or modify the X-Frame-Options header
-    headers = dict(response.headers)
-    headers.pop('X-Frame-Options', None)  # Remove the X-Frame-Options header
-
-    return Response(response.content, headers=headers)
-
 # Route: Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
