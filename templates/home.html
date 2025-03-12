@@ -8,7 +8,15 @@
     <!--link rel="stylesheet" href="{{ url_for('static', filename='cwasa.css') }}">
     <script type="text/javascript" src="{{ url_for('static', filename='allcsa.js') }}"></script-->
     <link rel="stylesheet" href="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/cwasa.css" />
-    <!--script type="text/javascript" src="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/allcsa.js"></script-->
+    <script type="text/javascript" src="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/allcsa.js"></script>
+    <style>
+        .CWASAPanel {
+            display: block !important; /* Ensure the CWASA panel is visible */
+        }
+        .divCtrlPanel {
+            display: block !important; /* Ensure the control panel is visible */
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -52,7 +60,7 @@
                         <tbody>
                             <tr>
                                 <td align="center">
-                                    <div class="divCtrlPanel" style="display: none;">
+                                    <div class="divCtrlPanel" style="display: block;">
                                         <!--========================================================-->
                                       <span class="spanPlayA av0">
                                       Avatar:
@@ -80,47 +88,8 @@
                                       <input type="text" class="txtSiGMLURL av0" value="scotland-H.sigml"><br>
                                       
                                       SiGML Text:<br>
-                                      <textarea class="txtaSiGMLText av0" rows="4">&lt;?xml version="1.0" encoding="utf-8"?&gt;
-                                      &lt;sigml&gt;
-                                      
-                                      &lt;hns_sign gloss="mug"&gt;
-                                        &lt;hamnosys_nonmanual&gt;
-                                          &lt;hnm_mouthpicture picture="mVg"/&gt;
-                                        &lt;/hamnosys_nonmanual&gt;
-                                        &lt;hamnosys_manual&gt;
-                                          &lt;hamfist/&gt; &lt;hamthumbacrossmod/&gt;
-                                              &lt;hamextfingerol/&gt; &lt;hampalml/&gt;
-                                          &lt;hamshoulders/&gt;
-                                          &lt;hamparbegin/&gt; &lt;hammoveu/&gt; &lt;hamarcu/&gt;
-                                              &lt;hamreplace/&gt; &lt;hamextfingerul/&gt; &lt;hampalmdl/&gt;
-                                          &lt;hamparend/&gt;
-                                        &lt;/hamnosys_manual&gt;
-                                      &lt;/hns_sign&gt;
-                                      
-                                      &lt;hns_sign gloss="take"&gt;
-                                        &lt;hamnosys_nonmanual&gt;
-                                          &lt;hnm_mouthpicture picture="te_Ik"/&gt;
-                                        &lt;/hamnosys_nonmanual&gt;
-                                        &lt;hamnosys_manual&gt;
-                                          &lt;hamceeall/&gt; &lt;hamextfingerol/&gt; &lt;hampalml/&gt;
-                                          &lt;hamlrbeside/&gt; &lt;hamshoulders/&gt; &lt;hamarmextended/&gt;
-                                          &lt;hamreplace/&gt; &lt;hamextfingerl/&gt; &lt;hampalml/&gt;
-                                          &lt;hamchest/&gt; &lt;hamclose/&gt;
-                                        &lt;/hamnosys_manual&gt;
-                                      &lt;/hns_sign&gt;
-                                      
-                                      &lt;hns_sign gloss="i"&gt;
-                                        &lt;hamnosys_nonmanual&gt;
-                                          &lt;hnm_mouthpicture picture="a_I"/&gt;
-                                        &lt;/hamnosys_nonmanual&gt;
-                                        &lt;hamnosys_manual&gt;
-                                          &lt;hamfinger2/&gt; &lt;hamthumbacrossmod/&gt;
-                                          &lt;hamextfingeril/&gt; &lt;hampalmr/&gt;
-                                          &lt;hamchest/&gt; &lt;hamtouch/&gt;
-                                        &lt;/hamnosys_manual&gt;
-                                      &lt;/hns_sign&gt;
-                                      
-                                      &lt;/sigml&gt;
+                                      <textarea class="txtaSiGMLText av0" rows="4">
+                                      <!-- Default SiGML code will be dynamically generated and inserted here -->
                                       </textarea>
                                       </span>  <!--class="divSiGML av0"-->
                                       <br>
@@ -178,20 +147,54 @@
         </div>
     </div>
     <script>
-        function saveTextHistory() {
-            const text = document.querySelector('.text-box').value;
-            fetch('/save-history', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text }),
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Text saved to history!');
+        async function fetchSiGML(word) {
+            try {
+                const response = await fetch(`/static/SignFiles/${word}.sigml`);
+                if (response.ok) {
+                    console.log(`Successfully fetched SiGML for word: ${word}`);
+                    return await response.text();
                 } else {
-                    alert('Failed to save text: ' + data.error);
+                    console.error(`Failed to fetch SiGML for word: ${word}`);
+                    return '';
                 }
-            });
+            } catch (error) {
+                console.error(`Error fetching SiGML for word: ${word}`, error);
+                return '';
+            }
+        }
+
+        async function playText() {
+            const text = document.querySelector('.text-box').value;
+            console.log("Text to play:", text);
+            const words = text.split(' ');
+            let sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>';
+
+            for (const word of words) {
+                console.log("Fetching SiGML for word:", word);
+                const sigml = await fetchSiGML(word);
+                sigmlText += sigml;
+            }
+
+            sigmlText += '</sigml>';
+            console.log("Generated SiGML text:", sigmlText);
+            document.querySelector('.txtaSiGMLText.av0').value = sigmlText; // Update the SiGML textarea
+            document.querySelector('.bttnPlaySiGMLText.av0').click();
+        }
+
+        async function playTranscript(transcript) {
+            console.log("Transcript received:", transcript);
+            const words = transcript.split(' ');
+            let sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>';
+
+            for (const word of words) {
+                console.log("Fetching SiGML for word:", word);
+                const sigml = await fetchSiGML(word);
+                sigmlText += sigml;
+            }
+            sigmlText += '</sigml>';
+            console.log("Generated SiGML text:", sigmlText);
+            document.querySelector('.txtaSiGMLText.av0').value = sigmlText;
+            document.querySelector('.bttnPlaySiGMLText.av0').click();
         }
 
         function toggleMenu() {
@@ -206,9 +209,9 @@
                 document.querySelector('.text-box').value = savedText;
                 localStorage.removeItem('savedText');
             }
+            
         }
     </script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    <script type="text/javascript" src="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/allcsa.js"></script>
 </body>
 </html>

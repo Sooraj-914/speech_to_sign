@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify, flash,Response
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify, flash, Response
 import requests
 import firebase_admin
 from firebase_admin import credentials, auth
@@ -24,24 +24,21 @@ else:
 if not firebase_admin._apps:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
-db=firestore.client()
+db = firestore.client()
 
 # Route: Home
 @app.route('/')
 def home():
     text = request.args.get('text', '')
-    return render_template('home.html',text=text)
+    return render_template('home.html', text=text)
 
 # Route: Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    #print("Login page opened!")
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        #print(f"Trying to log in user with email: {email}")
         try:
-            # Search Firestore for user with matching email
             users_ref = db.collection('users')
             query = users_ref.where('email', '==', email).stream()
 
@@ -51,17 +48,14 @@ def login():
                 break
 
             if not user_doc:
-                #print("Login failed - User not found")
                 flash("User not found. Please sign up first.", "error")
                 return redirect(url_for('login'))
 
             user_data = user_doc.to_dict()
-            #print(f"User found in Firestore: {user_data['username']}")
-            # Check hashed password
             if bcrypt.checkpw(password.encode('utf-8'), user_data['password'].encode('utf-8')):
-                session['user_id'] = user_doc.id  # You already have this
-                session['username'] = user_data['username']  # Store username
-                session['email'] = user_data['email']  # Store email (optional, but useful)
+                session['user_id'] = user_doc.id
+                session['username'] = user_data['username']
+                session['email'] = user_data['email']
 
                 return redirect(url_for('home'))
             else:
@@ -82,7 +76,6 @@ def signup():
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         try:
-            # Create user in Firebase Authentication
             user = auth.create_user(
                 email=email,
                 password=password,
@@ -90,7 +83,6 @@ def signup():
             )
             print(f"User Created: {user.uid}")
 
-            # Save user data into Firestore 'users' collection
             user_data = {
                 "username": username,
                 "email": email,
@@ -98,17 +90,15 @@ def signup():
                 "createdAt": firestore.SERVER_TIMESTAMP
             }
 
-            # Write to Firestore
             db.collection('users').document(user.uid).set(user_data)
             print(f"User data written to Firestore for UID: {user.uid}")
 
-            return redirect('/login')  # Important to have return here
+            return redirect('/login')
 
         except Exception as e:
             print(f"Error during signup: {e}")
-            return f"Error creating user: {str(e)}"  # Important: this ensures you always return something
+            return f"Error creating user: {str(e)}"
 
-    # This is important too - if it's a GET request (form not submitted yet), show signup page
     return render_template('signup.html')
 
 # Route: Logout
@@ -121,7 +111,7 @@ def logout():
 def feedback():
     return render_template('feedback.html')
 
-#Route:Test Firebase
+# Route: Test Firebase
 @app.route('/test-firebase')
 def test_firebase():
     try:
@@ -129,14 +119,12 @@ def test_firebase():
 
         db = firestore.client()
 
-        # Write a test document to Firestore
         test_data = {
             "status": "working",
             "timestamp": "2025-03-01"
         }
         db.collection("test").document("connection_test").set(test_data)
 
-        # Read it back to verify
         doc = db.collection("test").document("connection_test").get()
         if doc.exists:
             return jsonify({"success": True, "data": doc.to_dict()})
@@ -146,14 +134,14 @@ def test_firebase():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
-#Route:Dashboard
+# Route: Dashboard
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
         return redirect('/login')
     return render_template('home.html')
 
-#Route:Save History
+# Route: Save History
 @app.route('/save-history', methods=['POST'])
 def save_history():
     if 'user_id' not in session:
@@ -168,7 +156,6 @@ def save_history():
     try:
         user_id = session['user_id']
 
-        # Add history entry to Firestore under the user’s document
         history_entry = {
             'text': text,
             'timestamp': firestore.SERVER_TIMESTAMP
@@ -181,7 +168,7 @@ def save_history():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-#Route:History
+# Route: History
 @app.route('/history')
 def history():
     if 'user_id' not in session:

@@ -32,6 +32,27 @@ function clearText() {
 }
 
 // Function to start speech recognition
+/*function startSpeechRecognition() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        console.log("Speech recognition result:", transcript);
+        document.querySelector('.text-box').value = transcript;
+        playTranscript(transcript);
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error detected: ' + event.error);
+    };
+
+    recognition.start();
+}*/
+
+// Function to start speech recognition
 function startSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert("Your browser does not support speech recognition.");
@@ -65,6 +86,41 @@ function startSpeechRecognition() {
             recognition.start();
         })
         .catch(err => alert("Microphone access denied. Please enable it in your browser settings."));
+}
+
+// Function to play the transcript
+async function playTranscript(transcript) {
+    console.log("Transcript received:", transcript);
+    const words = transcript.split(' ');
+    let sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>';
+
+    for (const word of words) {
+        console.log("Fetching SiGML for word:", word);
+        const sigml = await fetchSiGML(word);
+        sigmlText += sigml;
+    }
+
+    sigmlText += '</sigml>';
+    console.log("Generated SiGML text:", sigmlText);
+    document.querySelector('.txtaSiGMLText.av0').value = sigmlText;
+    document.querySelector('.bttnPlaySiGMLText.av0').click();
+}
+
+// Function to fetch SiGML for a word
+async function fetchSiGML(word) {
+    try {
+        const response = await fetch(`/static/SignFiles/${word}.sigml`);
+        if (response.ok) {
+            console.log(`Successfully fetched SiGML for word: ${word}`);
+            return await response.text();
+        } else {
+            console.error(`Failed to fetch SiGML for word: ${word}`);
+            return '';
+        }
+    } catch (error) {
+        console.error(`Error fetching SiGML for word: ${word}`, error);
+        return '';
+    }
 }
 
 // Function to handle navigation
@@ -140,3 +196,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
