@@ -106,6 +106,48 @@ async function playTranscript(transcript) {
     document.querySelector('.bttnPlaySiGMLText.av0').click();
 }
 
+// Function to convert text to SiGML and play it using CWASA.playSiGMLText()
+async function playText() {
+    const text = document.querySelector('.text-box').value.trim();
+
+    if (text === "") {
+        alert("Please enter some text to convert.");
+        return;
+    }
+
+    console.log("Text to play:", text);
+    const words = text.split(' ');
+    let sigmlText = '<?xml version="1.0" encoding="utf-8"?>';
+
+    for (const word of words) {
+        console.log("Fetching SiGML for word:", word);
+        const sigml = await fetchSiGML(word);
+        if (sigml) {
+            sigmlText += sigml;
+        } else {
+            console.error(`No SiGML data found for word: ${word}`);
+        }
+    }
+
+    //sigmlText += '</sigml>';
+    console.log("Generated SiGML text:", sigmlText);
+
+    // Update the SiGML textarea in the CWASA player's GUI panel
+    const sigmlTextarea = document.querySelector('.txtaSiGMLText.av0');
+    if (sigmlTextarea) {
+        sigmlTextarea.value = sigmlText; // Update the textarea
+    } else {
+        console.error("SiGML textarea not found!");
+    }
+
+    // Use CWASA.playSiGMLText() to play the SiGML data
+    if (typeof CWASA !== 'undefined' && typeof CWASA.playSiGMLText === 'function') {
+        CWASA.playSiGMLText(sigmlText, 0); // Play the SiGML data
+    } else {
+        console.error("CWASA player is not initialized or playSiGMLText is not available.");
+    }
+}
+
 // Function to fetch SiGML for a word
 async function fetchSiGML(word) {
     try {
@@ -196,4 +238,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
+
 

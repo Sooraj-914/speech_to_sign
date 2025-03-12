@@ -32,6 +32,7 @@ def home():
     text = request.args.get('text', '')
     return render_template('home.html', text=text)
 
+
 # Route: Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
