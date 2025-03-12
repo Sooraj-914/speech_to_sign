@@ -14,12 +14,18 @@
     <div class="header">
         <div class="logo">SIGN LANGUAGE CONVERTER</div>
         <div class="menu-container">
-            <button class="signup-button" onclick="window.location.href='/signup'">Sign Up</button>
+            {% if 'user_id' in session %}
+                <button class="signup-button" onclick="window.location.href='/logout'">Log Out</button>
+            {% else %}
+                <button class="signup-button" onclick="window.location.href='/signup'">Sign Up</button>
+            {% endif %}
             <nav class="navbar">
                 <a href="/">Home</a>
                 <a href="/feedback">Feedback</a>
                 <a href="/">Contact</a>
-                <a href="/">Log out</a>
+                {% if 'user_id' in session %}
+                    <a href="/history">History</a>
+                {% endif %}
                 <a href="https://www.dictionary.com">Dictionary</a>
             </nav>
             <button class="menu-toggle" onclick="toggleMenu()">☰</button>
@@ -171,7 +177,35 @@
             </div>
         </div>
     </div>
+    <script>
+        function saveTextHistory() {
+            const text = document.querySelector('.text-box').value;
+            fetch('/save-history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text }),
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Text saved to history!');
+                } else {
+                    alert('Failed to save text: ' + data.error);
+                }
+            });
+        }
 
+        function toggleMenu() {
+            document.querySelector('.navbar').classList.toggle('show');
+        }
+
+        window.onload = function() {
+            const savedText = localStorage.getItem('savedText');
+            if (savedText) {
+                document.querySelector('.text-box').value = savedText;
+                localStorage.removeItem('savedText');
+            }
+        }
+    </script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script type="text/javascript" src="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/allcsa.js"></script>
 </body>

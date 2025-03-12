@@ -15,7 +15,7 @@
 
     <div class="container">
         <h2>Sign Up</h2>
-        <form class="signup-form" onsubmit="return validateForm()">
+        <form class="signup-form" method="POST" action="/signup" onsubmit="return validateForm()">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" placeholder="Enter your username" required aria-label="Username">
 
