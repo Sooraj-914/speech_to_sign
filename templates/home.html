@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/cwasa.css" />
     <!--script type="text/javascript" src="http://vhg.cmp.uea.ac.uk/tech/jas/vhg2021/cwa/allcsa.js"></script-->
 </head>
-<body onload="CWASA.init();">
+<body>
     <div class="header">
         <div class="logo">SIGN LANGUAGE CONVERTER</div>
         <div class="menu-container">
@@ -199,6 +199,8 @@
         }
 
         window.onload = function() {
+            CWASA.init();
+
             const savedText = localStorage.getItem('savedText');
             if (savedText) {
                 document.querySelector('.text-box').value = savedText;
