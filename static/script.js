@@ -32,27 +32,6 @@ function clearText() {
 }
 
 // Function to start speech recognition
-/*function startSpeechRecognition() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        console.log("Speech recognition result:", transcript);
-        document.querySelector('.text-box').value = transcript;
-        playTranscript(transcript);
-    };
-
-    recognition.onerror = function(event) {
-        console.error('Speech recognition error detected: ' + event.error);
-    };
-
-    recognition.start();
-}*/
-
-// Function to start speech recognition
 function startSpeechRecognition() {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         alert("Your browser does not support speech recognition.");
@@ -69,9 +48,14 @@ function startSpeechRecognition() {
             };
 
             recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
+                let transcript = event.results[0][0].transcript;
+                
+                // Remove trailing full stop if present
+                transcript = transcript.replace(/\.$/, '').trim();
+                
                 textBox.value = transcript; // Display recognized text in the text box
                 console.log("Recognized text:", transcript);
+                playTranscript(transcript); // Automatically play the transcript
             };
 
             recognition.onerror = function(event) {
@@ -91,19 +75,40 @@ function startSpeechRecognition() {
 // Function to play the transcript
 async function playTranscript(transcript) {
     console.log("Transcript received:", transcript);
-    const words = transcript.split(' ');
-    let sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>';
+    // Clean the transcript by removing punctuation and extra spaces
+    const cleanedTranscript = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').trim();
+    const words = cleanedTranscript.split(/\s+/); // Split on any whitespace
+    
+    let sigmlContent = '';  // This will hold the content between <sigml> tags
 
     for (const word of words) {
-        console.log("Fetching SiGML for word:", word);
-        const sigml = await fetchSiGML(word);
-        sigmlText += sigml;
+        if (!word) continue; // Skip empty words
+        
+        console.log("Processing word:", word);
+        let wordSigml = await getWordOrSpellingSigml(word.toLowerCase());
+        if (wordSigml) {
+            sigmlContent += wordSigml;
+        }
     }
 
-    sigmlText += '</sigml>';
+    // Wrap all content in a single set of <sigml> tags
+    const sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>' + sigmlContent + '</sigml>';
     console.log("Generated SiGML text:", sigmlText);
-    document.querySelector('.txtaSiGMLText.av0').value = sigmlText;
-    document.querySelector('.bttnPlaySiGMLText.av0').click();
+    
+    // Update the SiGML textarea in the CWASA player's GUI panel
+    const sigmlTextarea = document.querySelector('.txtaSiGMLText.av0');
+    if (sigmlTextarea) {
+        sigmlTextarea.value = sigmlText;
+    } else {
+        console.error("SiGML textarea not found!");
+    }
+
+    // Use CWASA.playSiGMLText() to play the SiGML data
+    if (typeof CWASA !== 'undefined' && typeof CWASA.playSiGMLText === 'function') {
+        CWASA.playSiGMLText(sigmlText, 0);
+    } else {
+        console.error("CWASA player is not initialized or playSiGMLText is not available.");
+    }
 }
 
 // Function to convert text to SiGML and play it using CWASA.playSiGMLText()
@@ -116,51 +121,84 @@ async function playText() {
     }
 
     console.log("Text to play:", text);
-    const words = text.split(' ');
-    let sigmlText = '<?xml version="1.0" encoding="utf-8"?>';
+    // Clean the text by removing punctuation and extra spaces
+    const cleanedText = text.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').trim();
+    const words = cleanedText.split(/\s+/); // Split on any whitespace
+    
+    let sigmlContent = '';  // This will hold the content between <sigml> tags
 
     for (const word of words) {
-        console.log("Fetching SiGML for word:", word);
-        const sigml = await fetchSiGML(word);
-        if (sigml) {
-            sigmlText += sigml;
-        } else {
-            console.error(`No SiGML data found for word: ${word}`);
+        if (!word) continue; // Skip empty words
+        
+        console.log("Processing word:", word);
+        let wordSigml = await getWordOrSpellingSigml(word.toLowerCase());
+        if (wordSigml) {
+            sigmlContent += wordSigml;
         }
     }
 
-    //sigmlText += '</sigml>';
+    // Wrap all content in a single set of <sigml> tags
+    const sigmlText = '<?xml version="1.0" encoding="utf-8"?><sigml>' + sigmlContent + '</sigml>';
     console.log("Generated SiGML text:", sigmlText);
 
     // Update the SiGML textarea in the CWASA player's GUI panel
     const sigmlTextarea = document.querySelector('.txtaSiGMLText.av0');
     if (sigmlTextarea) {
-        sigmlTextarea.value = sigmlText; // Update the textarea
+        sigmlTextarea.value = sigmlText;
     } else {
         console.error("SiGML textarea not found!");
     }
 
     // Use CWASA.playSiGMLText() to play the SiGML data
     if (typeof CWASA !== 'undefined' && typeof CWASA.playSiGMLText === 'function') {
-        CWASA.playSiGMLText(sigmlText, 0); // Play the SiGML data
+        CWASA.playSiGMLText(sigmlText, 0);
     } else {
         console.error("CWASA player is not initialized or playSiGMLText is not available.");
     }
 }
 
-// Function to fetch SiGML for a word
-async function fetchSiGML(word) {
+// Helper function to get SIGML for a word or spell it out letter by letter
+async function getWordOrSpellingSigml(word) {
+    // First try to get the word as a whole
+    let sigml = await fetchSiGML(word);
+    if (sigml) {
+        return sigml.replace(/<\/?sigml[^>]*>/g, '');
+    }
+
+    console.log(`No SIGML found for word "${word}", attempting to spell it out`);
+    let spellingSigml = '';
+    
+    // Spell out each letter
+    for (const letter of word) {
+        if (/[a-z]/.test(letter)) { // Only process letters a-z
+            const letterSigml = await fetchSiGML(letter);
+            if (letterSigml) {
+                spellingSigml += letterSigml.replace(/<\/?sigml[^>]*>/g, '');
+            } else {
+                console.error(`No SIGML found for letter: ${letter}`);
+            }
+        }
+    }
+    
+    return spellingSigml;
+}
+
+//  fetchSiGML function to clean XML declarations
+async function fetchSiGML(term) {
     try {
-        const response = await fetch(`/static/SignFiles/${word}.sigml`);
+        const response = await fetch(`/static/SignFiles/${term}.sigml`);
         if (response.ok) {
-            console.log(`Successfully fetched SiGML for word: ${word}`);
-            return await response.text();
+            console.log(`Successfully fetched SiGML for: ${term}`);
+            let sigml = await response.text();
+            // Remove XML declaration if present
+            sigml = sigml.replace(/<\?xml[^>]+\?>/, '');
+            return sigml;
         } else {
-            console.error(`Failed to fetch SiGML for word: ${word}`);
+            console.error(`Failed to fetch SiGML for: ${term}`);
             return '';
         }
     } catch (error) {
-        console.error(`Error fetching SiGML for word: ${word}`, error);
+        console.error(`Error fetching SiGML for: ${term}`, error);
         return '';
     }
 }
