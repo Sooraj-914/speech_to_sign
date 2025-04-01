@@ -49,7 +49,7 @@ body {
 }
 
 .login-form button, .signup-form button {
-    width: 100%;
+    width: 95%;
     padding: 10px;
     margin-top: 15px;
     background-color: #5f8a8b;
@@ -78,15 +78,6 @@ body {
 
 .remember-me label, .terms label {
     margin: 0;
-}
-
-.terms a {
-    color: #5f8a8b;
-    text-decoration: none;
-}
-
-.terms a:hover {
-    text-decoration: underline;
 }
 
 .forgot-password {
