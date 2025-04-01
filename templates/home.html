@@ -28,7 +28,7 @@
             <nav class="navbar">
                 <a href="/">Home</a>
                 <a href="/feedback">Feedback</a>
-                <a href="/">Contact</a>
+                <a href="/#contact">Contact</a>
                 {% if 'user_id' in session %}
                     <a href="/history">History</a>
                 {% endif %}
@@ -146,6 +146,13 @@
             </div>
         </div>
     </div>
+      <!-- Contact Section -->
+    <footer id="contact" class="contact-section">
+        <h2>Contact Us</h2>
+        <p>Email: support@signlanguage.com</p>
+        <p>Phone: +123 456 7890</p>
+        <p>Address: 123 Sign Language St, Communication City</p>
+    </footer>
     <script>
         // Function to fetch SiGML for a word
         async function fetchSiGML(word) {
@@ -235,7 +242,9 @@
                 localStorage.removeItem('savedText');
             }
         };
+
     </script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </body>
 </html>
+                                    
