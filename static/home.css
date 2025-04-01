@@ -55,6 +55,28 @@
     cursor: pointer;
 }
 
+.contact-section {
+    background-color: #5f8a8b;
+    color: white;
+    text-align: center;
+    padding: 30px;
+    margin-top: 50px;
+}
+
+.contact-section h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.contact-section p {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
 @media (max-width: 768px) {
     .navbar {
         display: none;
